@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Administrator permission mode",
+    "description": "Adds an Administrator preset to the permission menu: full access, never asks, two severe warnings, and enables the official computer use provider."
+  }
+}

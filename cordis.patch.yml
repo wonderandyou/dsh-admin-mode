@@ -1,0 +1,39 @@
+# 管理员权限档（@local/dsh-admin-mode）
+# 1) 启用官方 computer use（实验性原生驱动），版本固定与 DSH 运行时一致
+- insert:
+    - id: computer-use
+      name: '@deepseek-ai/dsh-computer-use'
+    - id: computer-use-cua-driver-native
+      name: '@deepseek-ai/dsh-experimental-computer-use-cua-driver-native'
+
+# 2) 新增「管理员」权限预设：完全访问 + 永不询问
+#    ⚠ 覆盖 config 会替换整个 presets 表，所以这里写全三个档位
+- id: permission
+  name: '@deepseek-ai/dsh-permission-presets'
+  config:
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: ask
+        name: read-only
+        description: 只读查看：不修改任何文件，写入会被拒绝。
+      workspace-write:
+        sandbox: workspace-write
+        approval: ask
+        name: workspace-write
+        description: 只在工作区和允许的临时目录里修改，越界操作需要你批准。
+      danger-full-access:
+        sandbox: danger-full-access
+        approval: never
+        name: danger-full-access
+        description: 完全文件访问，不再弹批准请求。
+      admin:
+        sandbox: danger-full-access
+        approval: never
+        name: 管理员
+        description: 完全访问且永不询问：截屏、鼠标键盘、任意工具全部放行，自主执行直到任务完成。
+
+# 3) 客户端：覆盖 composer 权限控件，加入「管理员」与两次严重警告
+- insert:
+    - id: admin-permission-ui
+      name: '@local/dsh-admin-mode'

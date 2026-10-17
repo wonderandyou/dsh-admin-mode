@@ -1,0 +1,38 @@
+{
+  "name": "@local/dsh-admin-mode",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "管理员权限档：完全访问 + 永不询问，两次严重警告，并启用官方 computer use",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "hud/*"
+  ],
+  "dependencies": {
+    "@deepseek-ai/dsh-computer-use": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-experimental-computer-use-cua-driver-native": "0.2.1-rc.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-permission-presets"
+      ]
+    }
+  }
+}
