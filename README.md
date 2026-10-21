@@ -59,8 +59,12 @@
 ### 只有「管理员」档能操作鼠标
 
 - 鼠标类工具（`click` / `double_click` / `right_click` / `drag` / `scroll` / `move_cursor` 以及浏览器点击）
-  在**非管理员档**会被 Host 侧 `tools.guard()` **直接拒绝**（不弹批准、不执行，任何插件都无法把它改回允许）
-- 想用鼠标 → 必须切到「管理员」档
+  在**非管理员档**下由 Host 侧 `tools.guard()` 拒绝（不弹批准、不执行）
+- ⚠ **已知限制**：官方 computer use 工具（`cua_driver_native__*`）走的是外部 MCP 通道，
+  实测**可能绕过 `tools.guard`**（非管理员档下点击仍会执行）。插件已加诊断标记
+  （`mouseGuardRegistered` / `mouseGuardCalls` / `mouseGuardLast` / `mouseGuardDeny`）
+  方便确认 guard 实际有没有被调用；要在 MCP 层彻底拦截需要改 computer-use 插件，不在本插件范围内
+- 想用鼠标 → 建议切到「管理员」档
 
 ### 鼠标必须滑动
 
