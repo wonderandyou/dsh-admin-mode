@@ -31,7 +31,7 @@
         sandbox: danger-full-access
         approval: never
         name: 管理员
-        description: 完全访问且永不询问：截屏、鼠标键盘、任意工具全部放行，自主执行直到任务完成。
+        description: 完全访问（无沙箱）+ 永不询问：截屏、鼠标键盘、任意工具全部放行，自主执行直到任务完成。核心规则：所有操作由 agent 自己完成并验证，不把测试交给用户。⚠ 鼠标工具仅此档可用；token 消耗显著。
 
 # 3) 客户端：覆盖 composer 权限控件，加入「管理员」与两次严重警告
 - insert:

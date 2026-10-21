@@ -16,7 +16,9 @@
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
-    "hud/*"
+    "docs/*",
+    "README.md",
+    "LICENSE"
   ],
   "dependencies": {
     "@deepseek-ai/dsh-computer-use": "0.2.1-rc.2",
