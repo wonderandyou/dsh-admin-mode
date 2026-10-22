@@ -143,39 +143,57 @@ export function apply(ctx) {
     mark('permissionPresets', false)
   }
 
+  // ★ 2026-10-22：注册前先显式等 tools 服务就绪。
+  //   本插件的 inject 是空数组，apply() 阶段直接读 ctx.tools 会抛错，
+  //   然后被下面的 try/catch 静默吞掉：诊断里只剩一行
+  //   mouseGuardRegistered=fail，鼠标门控全程未生效。
+  //   这里与上面 systemPrompt / permissionPresets / webServer 的注册方式保持一致。
   try {
-    ctx.tools.guard((exec) => {
-      // ★ 2026-10-21：诊断用 —— 记录 guard 实际被调用过几次、最近一次的工具名，
-      //   用来确认「MCP 类工具（cua_driver_native__*）到底走不走 tools.guard」。
-      guardCalls += 1
-      guardLast = String(exec && exec.name)
-      if (guardCalls === 1 || MOUSE_TOOLS.has(exec.name)) {
-        mark('mouseGuardCalls', guardCalls)
-        mark('mouseGuardLast', guardLast)
-      }
-      if (!MOUSE_TOOLS.has(exec.name)) return undefined
-      if (!permissionPresets) return undefined
-      let preset
+    // 先落一行「等待 tools 服务」，避免诊断里出现既没 ok 也没 fail 的空白。
+    mark('mouseGuardPending', true)
+    ctx.inject(['tools'], (childCtx) => {
       try {
-        const session = exec.agent?.session
-        preset = session ? permissionPresets.current(session) : undefined
-      } catch {
-        preset = undefined
+        childCtx.tools.guard((exec) => {
+          // ★ 2026-10-21：诊断用 —— 记录 guard 实际被调用过几次、最近一次的工具名，
+          //   用来确认「MCP 类工具（cua_driver_native__*）到底走不走 tools.guard」。
+          guardCalls += 1
+          guardLast = String(exec && exec.name)
+          if (guardCalls === 1 || MOUSE_TOOLS.has(exec.name)) {
+            mark('mouseGuardCalls', guardCalls)
+            mark('mouseGuardLast', guardLast)
+          }
+          if (!MOUSE_TOOLS.has(exec.name)) return undefined
+          if (!permissionPresets) return undefined
+          let preset
+          try {
+            const session = exec.agent?.session
+            preset = session ? permissionPresets.current(session) : undefined
+          } catch {
+            preset = undefined
+          }
+          // 只有「管理员」档（纯 danger-full-access + never）放行鼠标；
+          // 官方「自动审查（auto）」是独立档，不再等同管理员。
+          if (preset === 'admin') return undefined
+          mark('mouseGuardDeny', true)
+          return (
+            '鼠标操作仅限「管理员」权限档：' +
+            `当前权限档是「${preset ?? '未知'}」，已拒绝执行 ${exec.name}。` +
+            '请切换到管理员档，或者用不涉及鼠标的方式完成任务。'
+          )
+        })
+        mark('mouseGuardRegistered', true)
+      } catch (error) {
+        mark('mouseGuardRegistered', false)
+        channels.push('mouseGuardError=' + String(error).slice(0, 160))
+        writeDiag(channels)
+        console.warn('admin-mode: mouse guard skipped:', String(error))
       }
-      // 只有「管理员」档（纯 danger-full-access + never）放行鼠标；
-      // 官方「自动审查（auto）」是独立档，不再等同管理员。
-      if (preset === 'admin') return undefined
-      mark('mouseGuardDeny', true)
-      return (
-        '鼠标操作仅限「管理员」权限档：' +
-        `当前权限档是「${preset ?? '未知'}」，已拒绝执行 ${exec.name}。` +
-        '请切换到管理员档，或者用不涉及鼠标的方式完成任务。'
-      )
     })
-    mark('mouseGuardRegistered', true)
   } catch (error) {
     mark('mouseGuardRegistered', false)
-    console.warn('admin-mode: mouse guard skipped:', String(error))
+    channels.push('mouseGuardError=inject: ' + String(error).slice(0, 160))
+    writeDiag(channels)
+    console.warn('admin-mode: mouse guard inject skipped:', String(error))
   }
 
   // ================================================================ 鼠标状态
